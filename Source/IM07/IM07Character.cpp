@@ -10,6 +10,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "CoreMinimal.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -77,18 +78,41 @@ void AIM07Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 		
 		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started,		this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed,	this, &ACharacter::StopJumping);
 
 		// Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AIM07Character::Move);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered,	this, &AIM07Character::Move);
 
 		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AIM07Character::Look);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered,	this, &AIM07Character::Look);
+
+		// Attacking
+		PlayerInputComponent->BindAction("LeftMouseButton", IE_Pressed,				this, &AIM07Character::Trace);
 	}
 	else
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+	}
+}
+
+void AIM07Character::Trace()
+{
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	FVector Start	= GetMesh()->GetSocketLocation("FX_SweepCheck");
+	FVector End		= Start + GetActorForwardVector() * 300;
+
+	Params.AddIgnoredActor(this);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_WorldDynamic, Params);
+
+	UE_LOG(LogTemplateCharacter, Error, TEXT("AIM07Character::Trace()"), *GetNameSafe(this));
+
+	if (bHit)
+	{
+		AActor* HitActor = HitResult.GetActor();
+		HitActor->Destroy();
 	}
 }
 
