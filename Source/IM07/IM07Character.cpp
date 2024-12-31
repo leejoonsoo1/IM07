@@ -88,7 +88,7 @@ void AIM07Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered,	this, &AIM07Character::Look);
 
 		// Attacking
-		PlayerInputComponent->BindAction("LeftMouseButton", IE_Pressed,				this, &AIM07Character::Trace);
+		//PlayerInputComponent->BindAction("LeftMouseButton", IE_Pressed,				this, &AIM07Character::Trace);
 	}
 	else
 	{
@@ -98,22 +98,22 @@ void AIM07Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 void AIM07Character::Trace()
 {
-	FHitResult HitResult;
-	FCollisionQueryParams Params;
-	FVector Start	= GetMesh()->GetSocketLocation("FX_SweepCheck");
-	FVector End		= Start + GetActorForwardVector() * 300;
+	//FHitResult HitResult;
+	//FCollisionQueryParams Params;
+	//FVector Start	= GetMesh()->GetSocketLocation("FX_SweepCheck");
+	//FVector End		= Start + GetActorForwardVector() * 300;
 
-	Params.AddIgnoredActor(this);
+	//Params.AddIgnoredActor(this);
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_WorldDynamic, Params);
+	//bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_WorldDynamic, Params);
 
-	UE_LOG(LogTemplateCharacter, Error, TEXT("AIM07Character::Trace()"), *GetNameSafe(this));
+	//UE_LOG(LogTemplateCharacter, Error, TEXT("AIM07Character::Trace()"), *GetNameSafe(this));
 
-	if (bHit)
-	{
-		AActor* HitActor = HitResult.GetActor();
-		HitActor->Destroy();
-	}
+	//if (bHit)
+	//{
+	//	AActor* HitActor = HitResult.GetActor();
+	//	HitActor->Destroy();
+	//}
 }
 
 void AIM07Character::Move(const FInputActionValue& Value)
