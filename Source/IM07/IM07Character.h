@@ -73,6 +73,60 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "GASGamePlayAbility")
 	TSubclassOf<UGameplayEffect> DefaultAttributes;
 
+	// 플레이어가 해당 캐릭터 조종권한 얻었을때.
+	virtual void PossessedBy(AController* NewController) override;
+	// 캐릭터 상태가 변경됐을때 호출됨.
+	virtual void OnRep_PlayerState() override; 
+
+public: // 스킬 관련 함수
+	// 스킬 어빌리티 하나 초기화
+	UFUNCTION(BlueprintCallable, Category = "GASGamePlayAbilitySkill")
+	void InitializeAbility(TSubclassOf<UGameplayAbility> AbilityToGet, int32 AbilityLevel);
+
+	// 스킬 어빌리티 여러개 한 번에 초기화
+	UFUNCTION(BlueprintCallable, Category = "GASGamePlayAbility")
+	void InitializeAbilityMuti(TArray<TSubclassOf<UGameplayAbility>> AbilityToAcquire, int32 AbilityLevel);
+	
+public: // 어빌리티 태그 시스템 관련.
+	// 태그 삭제
+	UFUNCTION(BlueprintCallable, Category = "GASGamePlayAbility")
+	void RemoveAbilityWidthTags(FGameplayTagContainer TagContainer);
+
+	// 태그 취소
+	UFUNCTION(BlueprintCallable, Category = "GASGamePlayAbility")
+	void CancelAbilityWithTag(FGameplayTagContainer WithTag, FGameplayTagContainer WithoutTag);
+
+	// 태그 하나 추가
+	UFUNCTION(BlueprintCallable, Category = "GASGamePlayAbility")
+	void AddLooseGamePlayTag(FGameplayTag TagToAdd);
+
+	// 태그 하나만 삭제
+	UFUNCTION(BlueprintCallable, Category = "GASGamePlayAbility")
+	void RemoveLooseGamePlayTag(FGameplayTag TagToRemove);
+
+	// 태그 레벨 변경 레벨은 LOL로 치면 스킬레벨, QWER
+	UFUNCTION(BlueprintCallable, Category = "GASGamePlayAbility")
+	void ChangeAbilityLevelWithTags(FGameplayTagContainer TagContainer, int32 Level);
+
+public: // 캐릭터 속성 관련 기능 추가
+	UFUNCTION() // 체력 변경될때 불러지는 함수.
+	void OnHealthChangeNative(float Health, int32 StackCount);
+
+	// BlueprintImplementableEvent 블루프린트에서 이벤트 발생 
+	UFUNCTION(BlueprintImplementableEvent, Category = "GASGamePlayAbility")
+	void OnHealthChange(float Health, int32 StackCount);
+
+	// 현재 체력을 바로 가져오는거, pure는 구현 없음.
+	UFUNCTION(BlueprintPure, Category = "GASGamePlayAbility")
+	void HealthValues(float& Health, float& MaxHealth);
+
+	// 그냥 부름
+	UFUNCTION(BlueprintCallable, Category = "GASGamePlayAbility")
+	float GetHealth() const;
+
+	UFUNCTION(BlueprintCallable, Category = "GASGamePlayAbility")
+	float GetMaxHealth() const;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -94,8 +148,5 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-
-public:
-	void Trace();
 };
 

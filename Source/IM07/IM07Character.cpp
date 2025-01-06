@@ -69,6 +69,128 @@ UMyAbilitySystemComponent* AIM07Character::GetAbilitySystemComponent() const
 	return AbilitySystemComponent;
 }
 
+void AIM07Character::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (IsValid(AbilitySystemComponent))
+	{
+		// 어빌리티 시스템에서 해당 시스템을 사용하는 액터를 불러올수 있도록 전다.
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+		// 에디터에서 설정한 스킬, 전부 레벨 1로.
+		InitializeAbilityMuti(InitialAbilities, 1);
+	}
+}
+
+void AIM07Character::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	// 서버에서도 알맞은 액터를 쓸려면 여기서도 해야됨.
+	if (IsValid(AbilitySystemComponent))
+	{
+		// 어빌리티 시스템에서 해당 시스템을 사용하는 액터를 불러올수 있도록 전다.
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	}
+}
+
+void AIM07Character::InitializeAbility(TSubclassOf<UGameplayAbility> AbilityToGet, int32 AbilityLevel)
+{
+	// 온라인 상태에서 서버일때만 어빌리티 추가.
+	// 서버 아니면 하나마나 의미없음.
+	if (HasAuthority())
+	{
+		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AbilityToGet, AbilityLevel));
+	}
+}
+
+void AIM07Character::InitializeAbilityMuti(TArray<TSubclassOf<UGameplayAbility>> AbilityToAcquire, int32 AbilityLevel)
+{
+	if (HasAuthority())
+	{
+		for (TSubclassOf<UGameplayAbility> AbilityItem : AbilityToAcquire)
+		{
+			InitializeAbility(AbilityItem, AbilityLevel);
+		}
+	}
+}
+
+void AIM07Character::RemoveAbilityWidthTags(FGameplayTagContainer TagContainer)
+{
+	// 여러개 삭제
+	TArray<FGameplayAbilitySpec*> MatchingAbilities;
+
+	// 현재 가지고있는 태그를 비교해서 매개변수로 넣어준 컨테이너와 일치하는게 있으면 가져옴.
+	AbilitySystemComponent->GetActivatableGameplayAbilitySpecsByAllMatchingTags(TagContainer, MatchingAbilities, true);
+
+	// 돌아가면서 삭제
+	for (FGameplayAbilitySpec* spec : MatchingAbilities)
+	{
+		AbilitySystemComponent->ClearAbility(spec->Handle);
+	}
+}
+
+void AIM07Character::CancelAbilityWithTag(FGameplayTagContainer WithTag, FGameplayTagContainer WithoutTag)
+{
+	AbilitySystemComponent->CancelAbilities(&WithTag, &WithoutTag);
+}
+
+void AIM07Character::AddLooseGamePlayTag(FGameplayTag TagToAdd)
+{
+	AbilitySystemComponent->AddLooseGameplayTag(TagToAdd);
+	AbilitySystemComponent->SetTagMapCount(TagToAdd, 1);
+}
+
+void AIM07Character::RemoveLooseGamePlayTag(FGameplayTag TagToRemove)
+{
+	AbilitySystemComponent->RemoveLooseGameplayTag(TagToRemove);
+}
+
+void AIM07Character::ChangeAbilityLevelWithTags(FGameplayTagContainer TagContainer, int32 Level)
+{
+	// 여러개 삭제
+	TArray<FGameplayAbilitySpec*> MatchingAbilities;
+
+	// 현재 가지고있는 태그를 비교해서 매개변수로 넣어준 컨테이너와 일치하는게 있으면 가져옴.
+	AbilitySystemComponent->GetActivatableGameplayAbilitySpecsByAllMatchingTags(TagContainer, MatchingAbilities, true);
+
+	// 돌아가면서 레벨 변경
+	for (FGameplayAbilitySpec* spec : MatchingAbilities)
+	{
+		spec->Level = Level;
+	}
+}
+
+void AIM07Character::OnHealthChangeNative(float Health, int32 StackCount)
+{
+	// BlueprintImplementEvent 함수라 여기서 부르면 블루프린트에서 호출됨.
+	OnHealthChange(Health, StackCount);
+
+	if (Health <= 0)
+	{
+		// 죽음
+	}
+}
+
+void AIM07Character::HealthValues(float& Health, float& MaxHealth)
+{
+	if (IsValid(AttributeSetVar))
+	{
+		Health = AttributeSetVar->GetHealth();
+		MaxHealth = 1000.f; // 임시, 나중에 추가해야됨.
+	}
+}
+
+float AIM07Character::GetHealth() const
+{
+	return 0.0f;
+}
+
+float AIM07Character::GetMaxHealth() const
+{
+	return 0.0f;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -110,26 +232,6 @@ void AIM07Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	}
 }
 
-void AIM07Character::Trace()
-{
-	//FHitResult HitResult;
-	//FCollisionQueryParams Params;
-	//FVector Start	= GetMesh()->GetSocketLocation("FX_SweepCheck");
-	//FVector End		= Start + GetActorForwardVector() * 300;
-
-	//Params.AddIgnoredActor(this);
-
-	//bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_WorldDynamic, Params);
-
-	//UE_LOG(LogTemplateCharacter, Error, TEXT("AIM07Character::Trace()"), *GetNameSafe(this));
-
-	//if (bHit)
-	//{
-	//	AActor* HitActor = HitResult.GetActor();
-	//	HitActor->Destroy();
-	//}
-}
-
 void AIM07Character::BeginPlay()
 {
 	Super::BeginPlay(); // 부모 호출
@@ -142,7 +244,8 @@ void AIM07Character::BeginPlay()
 
 		if (AttributeSetVar != nullptr)
 		{
-
+			// 델리게이트로 HP 변경시 원하는 함수 호출 가능하도록.
+			const_cast<UMyAttributeSet*>(AttributeSetVar)->HealthChangeDelegate.AddDynamic(this, &AIM07Character::OnHealthChangeNative);
 		}
 	}
 	else

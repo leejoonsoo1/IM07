@@ -25,7 +25,7 @@ public:
 	UMyAttributeSet();
 
 	// Health 값이 변경될때 ReplicatedUsing 속성에 넣어준 함수 실행.
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Health)
 	FGameplayAttributeData Health;
 	ATTRIBUTE_ACCESSORS(UMyAttributeSet, Health); // 체력관리 함수 다만들어줌.
 
