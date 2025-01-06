@@ -5,7 +5,14 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+
+#include "MyAbilitySystemComponent.h"	// Ability System
+#include "MyAttributeSet.h"				// Attribute
+
 #include "IM07Character.generated.h"
+
+class UMyAbilitySystemComponent;
+class UMyAttributeSet;
 
 class USpringArmComponent;
 class UCameraComponent;
@@ -47,8 +54,27 @@ class AIM07Character : public ACharacter
 public:
 	AIM07Character();
 	
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GASGamePlayAbility")
+	UMyAbilitySystemComponent* AbilitySystemComponent;
+	
+	// Get 함수
+	virtual UMyAbilitySystemComponent* GetAbilitySystemComponent() const;
+	
+	// 캐릭터 관련 정보(HP, MP, Damage 등 보관)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GASGamePlayAbility")
+	const UMyAttributeSet* AttributeSetVar;
+
+	// EditDefaultsOnly 에디터에서 초기에 캐릭터의 스킬을 추가
+	UPROPERTY(EditDefaultsOnly, Category = "GASGamePlayAbility")
+	TArray<TSubclassOf<UGameplayAbility>> InitialAbilities;
+
+	// 스킬 관련 게임 어빌리티, 초기 능력치 세팅
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "GASGamePlayAbility")
+	TSubclassOf<UGameplayEffect> DefaultAttributes;
 
 protected:
+	virtual void BeginPlay() override;
 
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);

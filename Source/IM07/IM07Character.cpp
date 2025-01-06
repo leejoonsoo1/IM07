@@ -53,6 +53,20 @@ AIM07Character::AIM07Character()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
+	// 어빌리티 시스템 컴포넌트 생성해서 추가.
+	AbilitySystemComponent = CreateDefaultSubobject<UMyAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+
+	// 온라인 사용 여부 true가 온라인
+	AbilitySystemComponent->SetIsReplicated(true);
+
+	// 능력치 변경시 이벤트 호출 여부
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+}
+
+UMyAbilitySystemComponent* AIM07Character::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -114,6 +128,28 @@ void AIM07Character::Trace()
 	//	AActor* HitActor = HitResult.GetActor();
 	//	HitActor->Destroy();
 	//}
+}
+
+void AIM07Character::BeginPlay()
+{
+	Super::BeginPlay(); // 부모 호출
+
+	// 생성자에서 생성이 잘 됐는지 확인.
+	if (AbilitySystemComponent != nullptr)
+	{
+		// 데이터 에셋을 에디터에서 넣은걸 여기서 UMyAttributeSet 타입으로 캐스팅
+		AttributeSetVar = AbilitySystemComponent->GetSet<UMyAttributeSet>();
+
+		if (AttributeSetVar != nullptr)
+		{
+
+		}
+	}
+	else
+	{
+		// 호출한 함수 이름으로에러 메세지 출력.
+		UE_LOG(LogTemp, Error, TEXT("%s()Missing AbilitySystemComponent."), *FString(__FUNCTION__));
+	}
 }
 
 void AIM07Character::Move(const FInputActionValue& Value)
