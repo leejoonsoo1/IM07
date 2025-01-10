@@ -94,6 +94,52 @@ void AIM07Character::OnRep_PlayerState()
 	}
 }
 
+void AIM07Character::InitializeAttribute()
+{
+	if (IsValid(AbilitySystemComponent))
+		return;
+
+	if (IsValid(DefaultAttributes))
+	{
+		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Missing DefaultAttributes"), *GetNameSafe(this));
+
+		return;
+	}
+
+	// 이펙트 핸들 생성
+	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+	EffectContext.AddSourceObject(this); // 어떤 놈에게 적용할지.
+
+	FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(DefaultAttributes, 0, EffectContext);
+
+	if (NewHandle.IsValid())
+	{
+		AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*NewHandle.Data.Get(), AbilitySystemComponent);
+	}
+}
+
+void AIM07Character::AddStartupEffects()
+{
+	if (IsValid(AbilitySystemComponent) || GetLocalRole() != ROLE_Authority || AbilitySystemComponent->StartUpEffectSpplied)
+		return;
+
+	// 이펙트 핸들 생성
+	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+	EffectContext.AddSourceObject(this); // 어떤 놈에게 적용할지.
+
+	for (TSubclassOf<UGameplayEffect> GameplayEffect : StartUpEffects)
+	{
+		FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(GameplayEffect, 0, EffectContext);
+		
+		if (NewHandle.IsValid())
+		{
+			AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*NewHandle.Data.Get(), AbilitySystemComponent);
+		}
+	}
+  
+	AbilitySystemComponent->StartUpEffectSpplied = true;
+}
+
 void AIM07Character::InitializeAbility(TSubclassOf<UGameplayAbility> AbilityToGet, int32 AbilityLevel)
 {
 	// 온라인 상태에서 서버일때만 어빌리티 추가.
@@ -246,6 +292,9 @@ void AIM07Character::BeginPlay()
 		{
 			// 델리게이트로 HP 변경시 원하는 함수 호출 가능하도록.
 			const_cast<UMyAttributeSet*>(AttributeSetVar)->HealthChangeDelegate.AddDynamic(this, &AIM07Character::OnHealthChangeNative);
+
+			InitializeAttribute();
+			AddStartupEffects();
 		}
 	}
 	else
