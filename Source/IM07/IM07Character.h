@@ -79,6 +79,7 @@ public:
 
 	// 플레이어가 해당 캐릭터 조종권한 얻었을때.
 	virtual void PossessedBy(AController* NewController) override;
+
 	// 캐릭터 상태가 변경됐을때 호출됨.
 	virtual void OnRep_PlayerState() override; 
 

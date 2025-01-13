@@ -280,7 +280,8 @@ void AIM07Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 void AIM07Character::BeginPlay()
 {
-	Super::BeginPlay(); // 부모 호출
+	// 부모 호출
+	Super::BeginPlay(); 
 
 	// 생성자에서 생성이 잘 됐는지 확인.
 	if (AbilitySystemComponent != nullptr)
