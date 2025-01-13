@@ -215,6 +215,7 @@ void AIM07Character::OnHealthChangeNative(float Health, int32 StackCount)
 	if (Health <= 0)
 	{
 		// 죽음
+		Die();
 	}
 }
 
@@ -236,6 +237,36 @@ float AIM07Character::GetMaxHealth() const
 {
 	return 0.0f;
 }
+
+void AIM07Character::Die()
+{
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCharacterMovement()->GravityScale = 0.f;
+	GetCharacterMovement()->Velocity = FVector(0.f);
+
+	if (IsValid(AbilitySystemComponent))
+	{
+		// 실행중인 어빌리티 다 취소
+		AbilitySystemComponent->CancelAbilities();
+
+		// Die 태그를 캐릭터에 붙힌다.
+		FGameplayTag DieEffectTag = FGameplayTag::RequestGameplayTag(FName("Die"));
+		AbilitySystemComponent->AddLooseGameplayTag(DieEffectTag);
+
+		FGameplayTagContainer GameplayTag{ DieEffectTag };
+		// 해당 태그가 지금 붙어있는지 확인
+		bool IsSuccess = AbilitySystemComponent->TryActivateAbilitiesByTag(GameplayTag);
+
+		// 안 붙어있으면 실행
+		if (IsSuccess == false)
+		{
+			AbilitySystemComponent->AddLooseGameplayTag(DieEffectTag);
+			FinishDying();
+		}
+	}
+
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 // Input
