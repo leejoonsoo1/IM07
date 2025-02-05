@@ -5,23 +5,19 @@
 #include "Net/UnrealNetwork.h" //언리얼에 네트워크 통신
 #include "GameplayEffect.h" //능력치 전달용 이펙트,태그, 그런거 버프 디버프
 #include "GameplayEffectExtension.h" //확장용
-
 UMyAttributeSet::UMyAttributeSet()
 {
 }
-
 void UMyAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UMyAttributeSet,Health, OldHealth);
 }
-
 //이함수가 있어야 multicast 수신 가능
 void UMyAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME_CONDITION_NOTIFY(UMyAttributeSet, Health, COND_None, REPNOTIFY_Always);
 }
-
 //실질 적으로 호출 되는 이벤트 확인하는 부분
 void UMyAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data)
 {
