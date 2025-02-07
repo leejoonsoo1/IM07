@@ -9,15 +9,15 @@ void AMyPlayerController::OnPossess(APawn* aPawn)
 {
 	Super::OnPossess(aPawn);
 
+	if (!IsLocalPlayerController()) return;
+
 	AHUD* hud = GetHUD();
 	if (IsValid(hud))
 	{
 		AMyHUD* myhud = Cast<AMyHUD>(hud);
 		if (IsValid(myhud))
 		{
-			if (IsLocalController())
-				myhud->CreateHUD();
-
+			myhud->CreateHUD();
 			myhud->SpawnPlayerStateSetting(Cast<AunrealGas241227_1Character>(aPawn));
 		}
 	}
@@ -28,15 +28,15 @@ void AMyPlayerController::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 	//컨트롤러 주인이 내꺼가 아닐때는 안만들게
 
+	if (!IsLocalPlayerController()) return;
+
 	AHUD* hud = GetHUD();
 	if (IsValid(hud))
 	{
 		AMyHUD* myhud = Cast<AMyHUD>(hud);
 		if (IsValid(myhud))
 		{
-			if (IsLocalController())
-				myhud->CreateHUD();
-
+			myhud->CreateHUD();
 			myhud->SpawnPlayerStateSetting(Cast<AunrealGas241227_1Character>(GetCharacter()));
 		}
 	}
